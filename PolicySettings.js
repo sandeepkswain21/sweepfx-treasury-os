@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Alert } from 'react-native';
-import { fetchAllPolicies, createPolicy, updatePolicy, setActivePolicy, deactivatePolicy, deletePolicy } from './services/policyService';
+import { fetchAllPolicies, createPolicy, updatePolicy, setActivePolicy, deactivatePolicy, deletePolicy } from './policyService';
 
 export default function PolicySettings() {
   const [policies, setPolicies] = useState([]);
