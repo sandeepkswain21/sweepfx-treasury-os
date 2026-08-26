@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { evaluateSweepOpportunity } from '../utils/guardrails';
+import { evaluateSweepOpportunity } from './guardrails';
 
 export default function ScenarioSimulator() {
   const [simEurApy, setSimEurApy] = useState('3.8');
