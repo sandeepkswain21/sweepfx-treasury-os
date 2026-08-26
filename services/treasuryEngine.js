@@ -1,8 +1,8 @@
 import { supabase } from '../config/supabase';
-import { getLiveFxRates } from './fxService';
-import { generateTreasuryRationale } from './aiService';
-import { recordLedgerEntry } from './ledgerService';
-import { validateAgainstPolicy, DEFAULT_TREASURY_POLICY } from './policyService';
+import { getLiveFxRates } from '../fxService';
+import { generateTreasuryRationale } from '../aiService';
+import { recordLedgerEntry } from '../ledgerService';
+import { validateAgainstPolicy, DEFAULT_TREASURY_POLICY } from '../policyService';
 
 /**
  * Runs dynamic end-to-end treasury evaluation across ALL multi-currency vaults
