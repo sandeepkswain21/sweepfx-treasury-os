@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { evaluateSweepOpportunity } from '../utils/guardrails';
+import { evaluateSweepOpportunity } from './guardrails';
 
 /**
  * Fetches current accounts state from Supabase
