@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { supabase } from './config/supabase';
 
 export const fetchEnterpriseProfile = async () => {
   const { data, error } = await supabase
