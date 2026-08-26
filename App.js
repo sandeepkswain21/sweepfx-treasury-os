@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { supabase } from './config/supabase';
-import { runTreasuryEngine, executeTreasurySweep } from './treasuryEngine';
+import { runTreasuryEngine, executeTreasurySweep } from './services/treasuryEngine';
 import AuditLedger from './AuditLedger';
 import PolicySettings from './PolicySettings';
 import ScenarioSimulator from './ScenarioSimulator';
