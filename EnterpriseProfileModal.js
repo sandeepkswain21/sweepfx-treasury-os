@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { fetchEnterpriseProfile } from '../services/profileService';
+import { fetchEnterpriseProfile } from './profileService';
 
 export default function EnterpriseProfileModal({ visible, onClose }) {
   const [profile, setProfile] = useState(null);
