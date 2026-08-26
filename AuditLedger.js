@@ -92,3 +92,4 @@ const styles = StyleSheet.create({
   yieldLabel: { color: '#64748B', fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
   yieldValue: { color: '#059669', fontSize: 14, fontWeight: '800', marginTop: 2 },
 });
+
