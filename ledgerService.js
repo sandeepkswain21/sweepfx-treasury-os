@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { supabase } from './config/supabase';
 
 /**
  * Writes an immutable execution record directly to Supabase audit_ledger
