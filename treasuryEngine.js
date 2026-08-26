@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { supabase } from './config/supabase';
 import { getLiveFxRates } from './fxService';
 import { generateTreasuryRationale } from './aiService';
 import { recordLedgerEntry } from './ledgerService';
