@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { supabase } from './config/supabase';
 
 export const DEFAULT_TREASURY_POLICY = {
   policy_name: 'Default Enterprise Guardrails',
