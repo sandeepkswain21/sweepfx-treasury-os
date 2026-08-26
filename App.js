@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { supabase } from './config/supabase';
-import { runTreasuryEngine, executeTreasurySweep } from './services/treasuryEngine';
-import AuditLedger from './components/AuditLedger';
-import PolicySettings from './components/PolicySettings';
-import ScenarioSimulator from './components/ScenarioSimulator';
-import EnterpriseProfileModal from './components/EnterpriseProfileModal';
-import LandingPage from './components/LandingPage';
+import { runTreasuryEngine, executeTreasurySweep } from './treasuryEngine';
+import AuditLedger from './AuditLedger';
+import PolicySettings from './PolicySettings';
+import ScenarioSimulator from './ScenarioSimulator';
+import EnterpriseProfileModal from './EnterpriseProfileModal';
+import LandingPage from './LandingPage';
+
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('landing');
