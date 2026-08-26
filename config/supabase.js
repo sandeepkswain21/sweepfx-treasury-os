@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://yphnssxusoknuhodenno.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_QhPyfIKbbv-i3yHgIw3-7w_dI4xERwB';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Export a single, reusable database instance
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
