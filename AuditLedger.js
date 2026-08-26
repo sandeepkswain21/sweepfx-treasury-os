@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { fetchAuditTrail } from '../services/ledgerService';
+import { fetchAuditTrail } from './ledgerService';
 
 export default function AuditLedger() {
   const [logs, setLogs] = useState([]);
