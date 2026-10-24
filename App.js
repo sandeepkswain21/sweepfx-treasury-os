@@ -1,3 +1,4 @@
+import { initializeDB } from './services/mockDB';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { supabase } from './config/supabase';
@@ -27,6 +28,7 @@ export default function App() {
   const [txAmount, setTxAmount] = useState('5000');
 
   useEffect(() => {
+    initializeDB();
     loadDashboardData();
   }, []);
 
