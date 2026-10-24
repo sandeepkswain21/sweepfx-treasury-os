@@ -1,7 +1,6 @@
-import { initializeDB } from './services/mockDB';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
-import { supabase } from './config/supabase';
+// Note: We removed the Supabase import entirely!
 import { runTreasuryEngine, executeTreasurySweep } from './services/treasuryEngine';
 import AuditLedger from './AuditLedger';
 import PolicySettings from './PolicySettings';
@@ -9,6 +8,14 @@ import ScenarioSimulator from './ScenarioSimulator';
 import EnterpriseProfileModal from './EnterpriseProfileModal';
 import LandingPage from './LandingPage';
 
+// Import initializeDB from wherever you saved it (mockDB or policyService)
+import { initializeDB } from './services/policyService'; 
+
+const DEFAULT_ACCOUNTS = [
+  { id: 'acc-1', name: 'USD Main Operations', currency: 'USD', balance: 1250000, min_buffer: 500000, yield_apy: 0.045, bank_name: 'JPMorgan Chase Bank, N.A.', iban_account_no: 'US44 0210 0002 1234 5678', swift_routing: 'CHASUS33' },
+  { id: 'acc-2', name: 'EUR European Entity', currency: 'EUR', balance: 850000, min_buffer: 200000, yield_apy: 0.032, bank_name: 'Deutsche Bank AG', iban_account_no: 'DE89 3704 0044 0532 0130 00', swift_routing: 'DEUTDEFF' },
+  { id: 'acc-3', name: 'GBP UK Subsidiary', currency: 'GBP', balance: 420000, min_buffer: 150000, yield_apy: 0.038, bank_name: 'Barclays Bank PLC', iban_account_no: 'GB29 BARC 2018 2312 3456 78', swift_routing: 'BARCGB22' }
+];
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('landing');
@@ -28,26 +35,35 @@ export default function App() {
   const [txAmount, setTxAmount] = useState('5000');
 
   useEffect(() => {
-    initializeDB();
+    initializeDB(); // Loads your default policies
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
     try {
-      const { data: accs } = await supabase.from('accounts').select('*').order('currency');
-      const { data: recs } = await supabase
-        .from('recommendations')
-        .select('*')
-        .eq('status', 'PENDING_APPROVAL')
-        .order('created_at', { ascending: false });
+      // 1. Initialize default accounts and ledger if they don't exist
+      if (!localStorage.getItem('sweepfx_accounts')) {
+        localStorage.setItem('sweepfx_accounts', JSON.stringify(DEFAULT_ACCOUNTS));
+      }
+      if (!localStorage.getItem('sweepfx_recommendations')) {
+        localStorage.setItem('sweepfx_recommendations', JSON.stringify([]));
+      }
+      if (!localStorage.getItem('sweepfx_ledger')) {
+        localStorage.setItem('sweepfx_ledger', JSON.stringify([]));
+      }
 
-      // Fetch sum of realized yield from settled audit ledger entries
-      const { data: ledger } = await supabase.from('audit_ledger').select('realized_yield_usd');
-      const totalLedgerYield = ledger ? ledger.reduce((sum, item) => sum + Number(item.realized_yield_usd || 0), 0) : 0;
+      // 2. Fetch from Local Storage instead of Supabase
+      const accs = JSON.parse(localStorage.getItem('sweepfx_accounts'));
+      const allRecs = JSON.parse(localStorage.getItem('sweepfx_recommendations')) || [];
+      const recs = allRecs.filter(r => r.status === 'PENDING_APPROVAL');
+      const ledger = JSON.parse(localStorage.getItem('sweepfx_ledger')) || [];
+
+      // 3. Calculate Ledger Yield
+      const totalLedgerYield = ledger.reduce((sum, item) => sum + Number(item.realized_yield_usd || 0), 0);
       setRealizedLedgerYield(totalLedgerYield);
 
-      if (accs) setAccounts(accs);
-      if (recs) setRecommendations(recs);
+      setAccounts(accs);
+      setRecommendations(recs);
     } catch (err) {
       console.error('Data loading error:', err.message);
     }
@@ -58,7 +74,7 @@ export default function App() {
     try {
       const result = await runTreasuryEngine();
       if (!result.executed) {
-        alert(result.reason || 'Liquidity compliant. No sweeps needed.');
+        alert(result.reason || 'Liquidity optimal. No sweeps needed.');
       }
       await loadDashboardData();
     } catch (err) {
@@ -90,19 +106,18 @@ export default function App() {
       const currentBuffer = Number(acc.min_buffer);
       const updatedBuffer = Math.max(0, currentBuffer + delta);
 
-      const { error } = await supabase
-        .from('accounts')
-        .update({ min_buffer: updatedBuffer })
-        .eq('id', acc.id);
-
-      if (error) throw error;
+      // Update Local Storage instead of Supabase
+      const accs = JSON.parse(localStorage.getItem('sweepfx_accounts'));
+      const updatedAccs = accs.map(a => a.id === acc.id ? { ...a, min_buffer: updatedBuffer } : a);
+      localStorage.setItem('sweepfx_accounts', JSON.stringify(updatedAccs));
 
       await loadDashboardData();
 
       const engineRes = await runTreasuryEngine();
-      if (engineRes.executed) {
+      if (engineRes && engineRes.executed) {
         alert(`Operating Limit updated to ${acc.currency === 'EUR' ? '€' : acc.currency === 'GBP' ? '£' : '$'}${updatedBuffer.toLocaleString()}! New sweep opportunity generated.`);
       }
+      await loadDashboardData();
     } catch (err) {
       alert('Buffer Update Error: ' + err.message);
     } finally {
@@ -124,21 +139,18 @@ export default function App() {
     try {
       const numericAmount = parseFloat(txAmount) || 0;
       const currentBalance = Number(activeAccountForTx.balance);
-      const newBalance =
-        txType === 'DEPOSIT' ? currentBalance + numericAmount : Math.max(0, currentBalance - numericAmount);
+      const newBalance = txType === 'DEPOSIT' ? currentBalance + numericAmount : Math.max(0, currentBalance - numericAmount);
 
-      const { error } = await supabase
-        .from('accounts')
-        .update({ balance: newBalance })
-        .eq('id', activeAccountForTx.id);
-
-      if (error) throw error;
+      // Update Local Storage instead of Supabase
+      const accs = JSON.parse(localStorage.getItem('sweepfx_accounts'));
+      const updatedAccs = accs.map(a => a.id === activeAccountForTx.id ? { ...a, balance: newBalance } : a);
+      localStorage.setItem('sweepfx_accounts', JSON.stringify(updatedAccs));
 
       setIsTxModalOpen(false);
       await loadDashboardData();
 
       const result = await runTreasuryEngine();
-      if (result.executed) {
+      if (result && result.executed) {
         alert(`Transaction Executed! AI Treasury Engine detected balance shift and generated a sweep recommendation.`);
       } else {
         alert(`Transaction Executed! Updated Balance: ${activeAccountForTx.currency} ${newBalance.toLocaleString()}`);
@@ -612,6 +624,3 @@ const styles = StyleSheet.create({
   saveBtn: { backgroundColor: '#2563EB', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 8 },
   saveText: { color: '#FFFFFF', fontWeight: '700' },
 });
-
-
-// forcing update
