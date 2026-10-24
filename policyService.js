@@ -1,6 +1,5 @@
-import { supabase } from './config/supabase';
-
 export const DEFAULT_TREASURY_POLICY = {
+  id: 'default-1',
   policy_name: 'Default Enterprise Guardrails',
   max_sweep_percentage: 0.50,
   max_transaction_usd: 100000.00,
@@ -10,67 +9,88 @@ export const DEFAULT_TREASURY_POLICY = {
   policy_note: 'Standard risk limits designed to balance high-yield optimization with tight liquidity buffers for operating reserves.',
 };
 
-export const fetchAllPolicies = async () => {
-  const { data, error } = await supabase
-    .from('treasury_policies')
-    .select('*')
-    .order('created_at', { ascending: false });
+// Helper to simulate API latency
+const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
 
-  if (error || !data || data.length === 0) {
-    return [DEFAULT_TREASURY_POLICY];
+export const initializeDB = () => {
+  if (!localStorage.getItem('sweepfx_policies')) {
+    localStorage.setItem('sweepfx_policies', JSON.stringify([DEFAULT_TREASURY_POLICY]));
   }
-  return data;
+};
+
+export const fetchAllPolicies = async () => {
+  await delay();
+  const stored = localStorage.getItem('sweepfx_policies');
+  if (!stored) return [DEFAULT_TREASURY_POLICY];
+  const data = JSON.parse(stored);
+  return data.length > 0 ? data : [DEFAULT_TREASURY_POLICY];
 };
 
 export const createPolicy = async (policyData) => {
+  await delay();
   const newPolicy = {
     ...policyData,
+    id: crypto.randomUUID(),
     is_active: false,
   };
-  const { data, error } = await supabase.from('treasury_policies').insert([newPolicy]).select().single();
-  if (error) throw error;
-  return data;
+  const policies = await fetchAllPolicies();
+  const updatedPolicies = [newPolicy, ...policies]; // Adds new policy to the top
+  localStorage.setItem('sweepfx_policies', JSON.stringify(updatedPolicies));
+  return newPolicy;
 };
 
 export const updatePolicy = async (id, policyData) => {
-  const { data, error } = await supabase
-    .from('treasury_policies')
-    .update(policyData)
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  await delay();
+  let policies = await fetchAllPolicies();
+  let updatedPolicy = null;
+  policies = policies.map(p => {
+    if (p.id === id) {
+      updatedPolicy = { ...p, ...policyData };
+      return updatedPolicy;
+    }
+    return p;
+  });
+  localStorage.setItem('sweepfx_policies', JSON.stringify(policies));
+  return updatedPolicy;
 };
 
 export const setActivePolicy = async (id) => {
-  await supabase.from('treasury_policies').update({ is_active: false }).neq('id', id);
-  const { data, error } = await supabase
-    .from('treasury_policies')
-    .update({ is_active: true })
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  await delay();
+  let policies = await fetchAllPolicies();
+  let activePolicy = null;
+  policies = policies.map(p => {
+    if (p.id === id) {
+      activePolicy = { ...p, is_active: true };
+      return activePolicy;
+    }
+    return { ...p, is_active: false }; // Deactivates all other policies
+  });
+  localStorage.setItem('sweepfx_policies', JSON.stringify(policies));
+  return activePolicy;
 };
 
 // Deactivates a currently active policy
 export const deactivatePolicy = async (id) => {
-  const { data, error } = await supabase
-    .from('treasury_policies')
-    .update({ is_active: false })
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  await delay();
+  let policies = await fetchAllPolicies();
+  let deactivatedPolicy = null;
+  policies = policies.map(p => {
+    if (p.id === id) {
+      deactivatedPolicy = { ...p, is_active: false };
+      return deactivatedPolicy;
+    }
+    return p;
+  });
+  localStorage.setItem('sweepfx_policies', JSON.stringify(policies));
+  return deactivatedPolicy;
 };
 
-// Deletes a policy permanently from Supabase
+// Deletes a policy permanently
 export const deletePolicy = async (id) => {
-  const { error } = await supabase.from('treasury_policies').delete().eq('id', id);
-  if (error) throw error;
+  await delay();
+  const policies = await fetchAllPolicies();
+  const filteredPolicies = policies.filter(p => p.id !== id);
+  localStorage.setItem('sweepfx_policies', JSON.stringify(filteredPolicies));
   return true;
 };
 
